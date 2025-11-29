@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "utt-project-summary"
-version = "0.1.0-rc.1"
+version = "0.1.0-rc.2"
 description = "A utt plugin to show projects sorted by time spent"
 readme = "README.md"
 license = "GPL-3.0-only"
