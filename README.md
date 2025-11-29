@@ -1,5 +1,11 @@
 # utt-project-summary
 
+[![CI - Test](https://github.com/loganthomas/utt-project-summary/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/loganthomas/utt-project-summary/actions/workflows/unit-tests.yml)
+[![PyPI Latest Release](https://img.shields.io/pypi/v/utt-project-summary.svg)](https://pypi.org/project/utt-project-summary/)
+[![PyPI Downloads](https://img.shields.io/pypi/dm/utt-project-summary.svg?label=PyPI%20downloads)](https://pypi.org/project/utt-project-summary/)
+[![License - GPL-3.0](https://img.shields.io/pypi/l/utt-project-summary.svg)](https://github.com/loganthomas/utt-project-summary/blob/main/LICENSE)
+[![Python Versions](https://img.shields.io/pypi/pyversions/utt-project-summary.svg)](https://pypi.org/project/utt-project-summary/)
+
 A [`utt`](https://github.com/larose/utt) plugin that shows projects sorted by time spent.
 
 ## Why utt-project-summary?
