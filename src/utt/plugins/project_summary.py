@@ -122,10 +122,7 @@ class ProjectSummaryView:
         print("---------------", file=output)
         print(file=output)
 
-        project_names = [p.name for p in self._model.projects]
-        if self._show_current and self._model.current_activity:
-            project_names.append(self._current_activity_name)
-        max_name_len = max((len(name) for name in project_names), default=0)
+        max_name_len = max((len(p.name) for p in self._model.projects), default=0)
         total_secs = self._model.total_duration.total_seconds()
 
         max_dur_len = 0

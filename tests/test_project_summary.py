@@ -445,7 +445,11 @@ class TestProjectSummaryHandler:
             create_activity("backend: task1", datetime(2024, 1, 1, 9, 0), 120),
             create_activity("frontend: task1", datetime(2024, 1, 1, 11, 0), 60),
         ]
-        args = argparse.Namespace(show_perc=False)
+        args = argparse.Namespace(
+            show_perc=False,
+            no_current_activity=False,
+            current_activity="-- Current Activity --",
+        )
         output = io.StringIO()
 
         handler = ProjectSummaryHandler(args, activities, output)
