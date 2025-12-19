@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, NamedTuple
 
 from utt.api import _v1
 
+DEFAULT_CURRENT_ACTIVITY_NAME = "-- Current Activity --"
+
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
@@ -85,10 +87,10 @@ class ProjectSummaryModel:
 
     def _extract_current(self, activities: Sequence[_v1.Activity]) -> CurrentActivity | None:
         """Extract current activity if present."""
-        for activity in activities:
-            if activity.is_current_activity:
-                return CurrentActivity(activity.name.name, activity.duration)
-        return None
+        return next(
+            (CurrentActivity(a.name.name, a.duration) for a in activities if a.is_current_activity),
+            None,
+        )
 
     def _compute_total(self) -> timedelta:
         """Sum all project durations plus current activity."""
@@ -101,9 +103,17 @@ class ProjectSummaryModel:
 class ProjectSummaryView:
     """Render project summary output."""
 
-    def __init__(self, model: ProjectSummaryModel, show_perc: bool = False) -> None:
+    def __init__(
+        self,
+        model: ProjectSummaryModel,
+        show_perc: bool = False,
+        show_current: bool = True,
+        current_activity_name: str = DEFAULT_CURRENT_ACTIVITY_NAME,
+    ) -> None:
         self._model = model
         self._show_perc = show_perc
+        self._show_current = show_current
+        self._current_activity_name = current_activity_name
 
     def render(self, output: _v1.Output) -> None:
         """Render the project summary to output stream."""
@@ -112,7 +122,10 @@ class ProjectSummaryView:
         print("---------------", file=output)
         print(file=output)
 
-        max_name_len = max((len(p.name) for p in self._model.projects), default=0)
+        project_names = [p.name for p in self._model.projects]
+        if self._show_current and self._model.current_activity:
+            project_names.append(self._current_activity_name)
+        max_name_len = max((len(name) for name in project_names), default=0)
         total_secs = self._model.total_duration.total_seconds()
 
         max_dur_len = 0
@@ -128,13 +141,13 @@ class ProjectSummaryView:
                 dur_str = f"{dur_str:<{max_dur_len}} ({perc:5.1f}%)"
             print(f"{project.name:<{max_name_len}}: {dur_str}", file=output)
 
-        if self._model.current_activity:
+        if self._show_current and self._model.current_activity:
             ca = self._model.current_activity
             dur_str = ca.formatted
             if self._show_perc and total_secs > 0:
                 perc = (ca.duration.total_seconds() / total_secs) * 100
-                dur_str = f"{dur_str} ({perc:5.1f}%)"
-            print(f"{ca.name:<{max_name_len}}: {dur_str}", file=output)
+                dur_str = f"{dur_str:<{max_dur_len}} ({perc:5.1f}%)"
+            print(f"{self._current_activity_name:<{max_name_len}}: {dur_str}", file=output)
 
         print(file=output)
         total_str = format_duration(self._model.total_duration)
@@ -160,7 +173,13 @@ class ProjectSummaryHandler:
     def __call__(self) -> None:
         """Execute command."""
         model = ProjectSummaryModel(self._activities)
-        ProjectSummaryView(model, self._args.show_perc).render(self._output)
+        view = ProjectSummaryView(
+            model,
+            show_perc=self._args.show_perc,
+            show_current=not self._args.no_current_activity,
+            current_activity_name=self._args.current_activity,
+        )
+        view.render(self._output)
 
 
 def add_args(parser: argparse.ArgumentParser) -> None:
@@ -176,9 +195,9 @@ def add_args(parser: argparse.ArgumentParser) -> None:
     )
     parser.add_argument(
         "--current-activity",
-        default="-- Current Activity --",
+        default=DEFAULT_CURRENT_ACTIVITY_NAME,
         type=str,
-        help="Set the current activity",
+        help="Set the current activity name",
     )
     parser.add_argument(
         "--no-current-activity",
@@ -224,6 +243,8 @@ def add_args(parser: argparse.ArgumentParser) -> None:
     )
 
 
+# Note: type: ignore needed because _v1.Command expects a specific handler protocol
+# that differs from our implementation's signature (uses filtered_activities vs activities)
 project_summary_command = _v1.Command(
     name="project-summary",
     description="Show projects sorted by time spent",
