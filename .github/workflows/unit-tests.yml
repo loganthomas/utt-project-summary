@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev
+      - main
   pull_request:
 
 jobs:
@@ -34,5 +35,5 @@ jobs:
       - name: Run tests
         run: pytest
 
-      - name: Complete messsge
+      - name: Complete message
         run: echo "unit tests completed"
